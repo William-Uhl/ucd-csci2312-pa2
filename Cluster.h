@@ -16,6 +16,9 @@ namespace Clustering {
     struct LNode {
         PointPtr p;
         LNodePtr next;
+
+        //LNode constructor
+        LNode(PointPtr,  LNodePtr);
     };
 
     class Cluster {
@@ -33,6 +36,10 @@ namespace Clustering {
 
         // Set functions: They allow calling c1.add(c2.remove(p));
         void add(const PointPtr &);
+        void del();
+        void ins(LNodePtr,LNodePtr,LNodePtr);
+        void cpy(LNodePtr);
+
         const PointPtr &remove(const PointPtr &);
 
         // Overloaded operators
@@ -64,3 +71,4 @@ namespace Clustering {
 
 }
 #endif //UHL_PA2_CLUSTER_H
+
