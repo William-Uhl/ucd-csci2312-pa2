@@ -1,12 +1,13 @@
-//
+
 // Created by William Uhl on 9/15/2015.
 //
 
 #include "Cluster.h"
 
 namespace Clustering {
+
 //Copy constructor
-    Clustering::Cluster::Cluster(const Clustering::Cluster &inputCluster) {
+    Cluster::Cluster(const Cluster &inputCluster) {
         size = inputCluster.size;
 
         if (inputCluster.points == nullptr)
@@ -17,65 +18,138 @@ namespace Clustering {
     }
 
 //overloaded operator=
-//Clustering::Cluster &Clustering::Cluster::operator=(const Clustering::Cluster &cluster) {
-    //return <#initializer#>;
-//}
+Cluster &Cluster::operator=(const Cluster &cluster) {
+    return <#initializer#>;
+}
 
 //destructor
-    Clustering::Cluster::~Cluster() {
+    Cluster::~Cluster() {
 
     }
 
 //function add a point
-    void Clustering::Cluster::add(Clustering::PointPtr const &ptr) {
+    void Cluster::add(PointPtr const &ptr) {
 
+        if (size == 0){
+            points = new LNode(ptr, nullptr);
+        }
+        else{
+            LNodePtr curr = points;
+            LNodePtr nex = points->next;
+            LNodePtr newNode = new LNode(ptr,nullptr);
+            while(*(curr->p) <= *ptr){
+                if(newNode == nullptr || *(newNode->p) > *ptr){
+                    break;
+                }
+                else{
+                    curr = nex;
+                    nex = nex->next;
+                }
+            }
+            ins(curr,newNode,nex);
+        }
+        size++;
 
     }
 
 //function remove a point
-//Clustering::PointPtr const &Clustering::Cluster::remove(Clustering::PointPtr const &ptr) {
-    //  return <#initializer#>;
-//}
+PointPtr const &Cluster::remove(PointPtr const &ptr) {
+        if (size == 0){
+            std::cout << "Cluster is empty nothing to remove" << std::endl;
+            return 0;
+        }
+        else {
+            //traverse the cluster looking for the point to delete
+            LNodePtr curr = points;
+            LNodePtr n = points->next;
+            LNodePtr prev;
+
+            while (curr->p != ptr) {
+                prev = curr;
+                curr = n;
+                n = n->next;
+            }
+            //now c is point to remove
+            prev->next = n;
+            delete curr->p;
+            delete curr;
+            //what should remove return????
+            return n->p;
+        }
+
+
+}
 
 //overload operator<<
-//std::ostream &operator<<(std::ostream &ostream, const Clustering::Cluster &cluster) {
-    //return <#initializer#>;
-//}
+std::ostream &operator<<(std::ostream &ostream, const Cluster &cluster) {
+    return <#initializer#>;
+}
 
 //overload operator>>
-//std::istream &operator>>(std::istream &istream, Clustering::Cluster &cluster) {
-    //return <#initializer#>;
-//}
+std::istream &operator>>(std::istream &istream, Cluster &cluster) {
+    return <#initializer#>;
+}
 
 //overload operator==
-    bool operator==(const Clustering::Cluster &lhs, const Clustering::Cluster &rhs) {
-        return false;
+    bool operator==(const Cluster &lhs, const Cluster &rhs) {
+
+
+        if (lhs.size != rhs.size)
+            return false;       //this breaks the function??????
+
+        LNodePtr left = lhs.points;
+        LNodePtr right = rhs.points;
+
+        while(left != nullptr || right !=nullptr){
+            if (left != right)
+                return false;
+            left = left->next;
+            right = right->next;
+
+        }
+        return true;
+
     }
 
 //overload operator+=
-//Clustering::Cluster &Clustering::Cluster::operator+=(const Clustering::Cluster &rhs) {
-    //return <#initializer#>;
-//}
+Cluster &Cluster::operator+=(const Cluster &rhs) {
+
+    *this = *this + rhs;
+
+    return *this;
+}
 
 //overload operator-=
-//Clustering::Cluster &Clustering::Cluster::operator-=(const Clustering::Cluster &rhs) {
-    //return <#initializer#>;
-//}
+Cluster &Cluster::operator-=(const Cluster &rhs) {
+
+        *this = *this - rhs;
+
+        return *this;
+}
 
 //overload operator+=
-//Clustering::Cluster &Clustering::Cluster::operator+=(const Clustering::Point &rhs) {
-    //return <#initializer#>;
-//}
+Cluster &Cluster::operator+=(const Point &rhs) {
+
+        this->add(&rhs);
+
+    return *this;
+}
 
 //overload operator-=
-//Clustering::Cluster &Clustering::Cluster::operator-=(const Clustering::Point &rhs) {
-    //return <#initializer#>;
-//}
+Cluster &Cluster::operator-=(const Point &rhs) {
+
+        this->remove(&rhs);
+
+    return *this;
+}
 
 //overload operator+ with two clusters
-//const Clustering::Cluster operator+(const Clustering::Cluster &lhs, const Clustering::Cluster &rhs) {
-    // return Clustering::Cluster();
-//}
+const Cluster operator+(const Cluster &lhs, const Cluster &rhs) {
+
+
+
+        return Clustering::Cluster();
+}
 
 //overload operator- with two clusters
 //const Clustering::Cluster operator-(const Clustering::Cluster &lhs, const Clustering::Cluster &rhs) {
@@ -90,5 +164,56 @@ namespace Clustering {
 //overload operator- with a cluster and a point
     const Clustering::Cluster operator-(const Clustering::Cluster &lhs, Clustering::PointPtr const &rhs) {
         return Clustering::Cluster();
+    }
+
+    void Cluster::del() {
+
+        if(size!=0){
+            LNodePtr c= points;
+            LNodePtr n = points->next;
+            delete c->p;
+
+            while(n!=nullptr) {
+                c = n;
+                n = n->next;
+                delete c->p;
+                delete c;
+            }
+
+        }
+        points=nullptr;
+        size = 0;
+
+    }
+
+
+    //inserts a LNode intro a cluster
+    void Cluster::ins(LNodePtr first, LNodePtr add, LNodePtr last){
+        first->next = add;
+        add->next = last;
+    }
+
+    void Cluster::cpy(LNodePtr ptr) {
+        LNodePtr end = ptr;
+        LNodePtr curr = new LNode(end->p, nullptr);
+        points = curr;
+        LNodePtr prev = curr;
+        end = end->next;
+
+        for( ; end != nullptr; end = end->next){
+            curr = new LNode(end->p, nullptr);
+            prev->next = curr;
+            prev = curr;
+        }
+
+    }
+
+
+    //constructor for LNode
+    LNode::LNode(PointPtr ptr, LNodePtr nodePtr) {
+
+        p = ptr;
+        next = nodePtr;
+
     }
 }
