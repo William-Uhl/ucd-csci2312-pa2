@@ -1,4 +1,4 @@
-
+//
 // Created by William Uhl on 9/15/2015.
 //
 
@@ -18,9 +18,9 @@ namespace Clustering {
     }
 
 //overloaded operator=
-Cluster &Cluster::operator=(const Cluster &cluster) {
-    return <#initializer#>;
-}
+//Cluster &Cluster::operator=(const Cluster &cluster) {
+//    return <#initializer#>;
+//}
 
 //destructor
     Cluster::~Cluster() {
@@ -38,7 +38,7 @@ Cluster &Cluster::operator=(const Cluster &cluster) {
             LNodePtr nex = points->next;
             LNodePtr newNode = new LNode(ptr,nullptr);
             while(*(curr->p) <= *ptr){
-                if(newNode == nullptr || *(newNode->p) > *ptr){
+                if(nex == nullptr || *(newNode->p) > *ptr){
                     break;
                 }
                 else{
@@ -56,7 +56,7 @@ Cluster &Cluster::operator=(const Cluster &cluster) {
 PointPtr const &Cluster::remove(PointPtr const &ptr) {
         if (size == 0){
             std::cout << "Cluster is empty nothing to remove" << std::endl;
-            return 0;
+            return ptr;
         }
         else {
             //traverse the cluster looking for the point to delete
@@ -81,14 +81,29 @@ PointPtr const &Cluster::remove(PointPtr const &ptr) {
 }
 
 //overload operator<<
-std::ostream &operator<<(std::ostream &ostream, const Cluster &cluster) {
-    return <#initializer#>;
+std::ostream &operator<<(std::ostream &os, const Cluster &cluster) {
+        if (cluster.size == 0) {
+            os << "Cluster is empty" << std::endl;
+            return os;
+        }
+
+        LNodePtr current = cluster.points;
+        int counter =1;
+        for( ; current != nullptr; current = current->next) {
+            os << "Point " << counter++ << std::endl;
+            os << *(current->p) << std::endl;
+
+
+        }
+        return os;
+
+
 }
 
 //overload operator>>
-std::istream &operator>>(std::istream &istream, Cluster &cluster) {
-    return <#initializer#>;
-}
+//std::istream &operator>>(std::istream &istream, Cluster &cluster) {
+   // return <#initializer#>;
+//}
 
 //overload operator==
     bool operator==(const Cluster &lhs, const Cluster &rhs) {
@@ -100,7 +115,7 @@ std::istream &operator>>(std::istream &istream, Cluster &cluster) {
         LNodePtr left = lhs.points;
         LNodePtr right = rhs.points;
 
-        while(left != nullptr || right !=nullptr){
+        while(left != nullptr && right !=nullptr){
             if (left != right)
                 return false;
             left = left->next;
@@ -112,59 +127,104 @@ std::istream &operator>>(std::istream &istream, Cluster &cluster) {
     }
 
 //overload operator+=
-Cluster &Cluster::operator+=(const Cluster &rhs) {
-
-    *this = *this + rhs;
-
-    return *this;
-}
-
-//overload operator-=
-Cluster &Cluster::operator-=(const Cluster &rhs) {
-
-        *this = *this - rhs;
-
-        return *this;
-}
+//Cluster &Cluster::operator+=(const Cluster &rhs) {
+//
+//    *this = *this + rhs;
+//
+//    return *this;
+//}
+//
+////overload operator-=
+//Cluster &Cluster::operator-=(const Cluster &rhs) {
+//
+//        *this = *this - rhs;
+//
+//        return *this;
+//}
 
 //overload operator+=
-Cluster &Cluster::operator+=(const Point &rhs) {
-
-        this->add(&rhs);
-
-    return *this;
-}
+//Cluster &Cluster::operator+=(const Point &rhs) {
+//
+//        this->add(&rhs);
+//
+//        return *this;
+//}
 
 //overload operator-=
-Cluster &Cluster::operator-=(const Point &rhs) {
-
-        this->remove(&rhs);
-
-    return *this;
-}
+//Cluster &Cluster::operator-=(const Point &rhs) {
+//
+//        this->remove(&rhs);
+//
+//    return *this;
+//}
 
 //overload operator+ with two clusters
 const Cluster operator+(const Cluster &lhs, const Cluster &rhs) {
 
+        LNodePtr left = lhs.points;
+        LNodePtr right = rhs.points;
+        Cluster c = Cluster();
+
+        while(left != nullptr || right !=nullptr){
+            if (left == right){
+                c.add(left->p);
+            }
+            else{
+                c.add(left->p);
+                c.add(right->p);
+            }
+            if(left!=nullptr)
+                left = left->next;
+            if(right!=nullptr)
+                right = right->next;
+
+        }
 
 
-        return Clustering::Cluster();
+        return c;
 }
 
 //overload operator- with two clusters
-//const Clustering::Cluster operator-(const Clustering::Cluster &lhs, const Clustering::Cluster &rhs) {
-    //return Clustering::Cluster();
-//}
+const Cluster operator-(const Cluster &lhs, const Cluster &rhs) {
+        LNodePtr left = lhs.points;
+        LNodePtr right = rhs.points;
+        Cluster c = Cluster();
+
+        while(left != nullptr || right !=nullptr){
+            if (left != right) {
+                c.add(left->p);
+            }
+            if(left!=nullptr)
+                left = left->next;
+            if(right!=nullptr)
+                right = right->next;
+        }
+
+
+        return c;
+}
 
 //overload operator+ with a cluster and a point
-    const Clustering::Cluster operator+(const Clustering::Cluster &lhs, Clustering::PointPtr const &rhs) {
-        return Clustering::Cluster();
-    }
-
-//overload operator- with a cluster and a point
-    const Clustering::Cluster operator-(const Clustering::Cluster &lhs, Clustering::PointPtr const &rhs) {
-        return Clustering::Cluster();
-    }
+//    const Cluster operator+(const Cluster &lhs, PointPtr const &rhs) {
+//
+//
+//        //is this even doing what i want?????
+//        Cluster *c = &lhs;
+//        c->add(rhs);
+//
+//
+//        return *c;
+//    }
+//
+////overload operator- with a cluster and a point
+//    const Cluster operator-(const Cluster &lhs, PointPtr const &rhs) {
+//
+//        //Again is this even close?
+//        Cluster *c = &lhs;
+//        c->remove(rhs);
+//
+//        return *c;
+//    }
 
     void Cluster::del() {
 
