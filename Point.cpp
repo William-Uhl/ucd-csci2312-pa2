@@ -19,7 +19,7 @@ namespace Clustering {
     }
 
 //copy constructor
-    Point::Point(const Clustering::Point &rhs) {
+    Point::Point(const Point &rhs) {
         dim = rhs.dim;
         values = new double[dim];
         for (int i = 0; i < dim; i++)
@@ -28,14 +28,14 @@ namespace Clustering {
     }
 
 //overloaded operator=
-    Point &Point::operator=(const Clustering::Point &rhs) {
+    Point &Point::operator=(const Point &rhs) {
         if (this == &rhs)
             return *this;  //prevent self assignment
         else {
             dim = rhs.dim;
             values = new double[dim];
-            for (int i = 0; i < dim; i++)
-                values[i] = rhs.values[i];
+            for (int i = 0; i < rhs.dim; i++)
+                values[i] = rhs.getValue(i);
         }
         return *this;
     }
@@ -74,9 +74,9 @@ namespace Clustering {
     }
 
 //overload operator*=
-    Point &Point::operator*=(double d) {
+    Point& Point::operator*=(double d) {
         for (int i = 0; i < dim; i++)
-            values[i] *= d;
+            values[i] = values[i]* d;
         return *this;
     }
 
@@ -90,16 +90,20 @@ namespace Clustering {
 
 //overload operator*
     const Point Point::operator*(double d) const {
-        return Clustering::Point(dim) *= d;
-        //need to call the destructor after using this
+        for (int i = 0; i < dim; i++)
+            values[i] *= d;
+        return *this;
+
     }
 
 
 //overload operator/
     const Point Point::operator/(double d) const {
         assert(d != 0.0);
-        return Clustering::Point(dim) /= d;
-        //need to call the destructor after
+        for (int i = 0; i < dim; i++)
+            values[i] /= d;
+        return *this;
+
     }
 
 //overload operator+=
@@ -251,10 +255,10 @@ namespace Clustering {
 
 //overload operator<<
     std::ostream &operator<<(std::ostream &os, const Point &point) {
-        os << "(";
+
         for (int i = 0; i < point.dim -1; i++)
             os << point.values[i] << ", ";
-        os << point.values[point.dim - 1] << ")" << endl;
+        os << point.values[point.dim - 1] ;
 
         return os;
     }
