@@ -193,24 +193,43 @@ Cluster &Cluster::operator+=(const Cluster &rhs) {
 
         LNodePtr left = this->points;
         LNodePtr right = rhs.points;
-        Cluster c = Cluster();
+        Cluster c = Cluster(rhs);
+        bool same = false;
 
-        while(left != nullptr || right !=nullptr){
-            if (left == right){
-                c.add(left->p);
-                c.size++;
-            }
-            else{
-                c.add(left->p);
-                c.add(right->p);
-                c.size = c.size +2;
-            }
-            if(left!=nullptr)
+            while (left != nullptr) {
+
+                while (right != nullptr) {
+                    if (left->p == right->p) {
+
+                        same = true;
+                    }
+
+                    right = right->next;
+                }
+                if (same == false) {
+                    c.add(left->p);
+                    c.size++;
+                }
                 left = left->next;
-            if(right!=nullptr)
-                right = right->next;
+            }
 
-        }
+//
+//        while(left != nullptr || right !=nullptr){
+//            if (left == right){
+//                c.add(left->p);
+//                c.size++;
+//            }
+//            else{
+//                c.add(left->p);
+//                c.add(right->p);
+//                c.size = c.size +2;
+//            }
+//            if(left!=nullptr)
+//                left = left->next;
+//            if(right!=nullptr)
+//                right = right->next;
+//
+//        }
 
 
         return c;
@@ -222,25 +241,32 @@ Cluster &Cluster::operator-=(const Cluster &rhs) {
 
         LNodePtr left = this->points;
         LNodePtr right = rhs.points;
-        Cluster c = Cluster();
+        Cluster c = Cluster(*this);
+        bool same = false;
 
-        while(left != nullptr || right !=nullptr){
-            if (left == right){
-                c.add(left->p);
-                c.size++;
-            }
-            else{
-                c.add(left->p);
-                c.add(right->p);
-                c.size = c.size +2;
-            }
-
-                left = left->next;
-            if(right!=nullptr)
-                right = right->next;
-
+        if(this->size == 0) {
+            return c;
         }
 
+        else{
+
+            while (left != nullptr) {
+
+                while (right != nullptr) {
+                    if (left->p == right->p) {
+
+                        same = true;
+                    }
+                    right = right->next;
+
+                }
+                if (same == true) {
+                    c.remove(left->p);
+                    c.size--;
+                }
+                left = left->next;
+            }
+        }
 
         return c;
 }
@@ -266,24 +292,46 @@ const Cluster operator+(const Cluster &lhs, const Cluster &rhs) {
 
         LNodePtr left = lhs.points;
         LNodePtr right = rhs.points;
-        Cluster c = Cluster();
+        Cluster c = Cluster(rhs);
+        bool same = false;
 
-        while(left != nullptr || right !=nullptr){
-            if (left == right){
+        while (left != nullptr) {
+
+            while (right != nullptr) {
+                if (left->p == right->p) {
+
+                    same = true;
+                }
+
+                right = right->next;
+            }
+            if (same == false) {
                 c.add(left->p);
                 c.size++;
             }
-            else{
-                c.add(left->p);
-                c.add(right->p);
-                c.size = c.size +2;
-            }
-            if(left!=nullptr)
-                left = left->next;
-            if(right!=nullptr)
-                right = right->next;
-
+            left = left->next;
         }
+//
+//        LNodePtr left = lhs.points;
+//        LNodePtr right = rhs.points;
+//        Cluster c = Cluster();
+//
+//        while(left != nullptr || right !=nullptr){
+//            if (left == right){
+//                c.add(left->p);
+//                c.size++;
+//            }
+//            else{
+//                c.add(left->p);
+//                c.add(right->p);
+//                c.size = c.size +2;
+//            }
+//            if(left!=nullptr)
+//                left = left->next;
+//            if(right!=nullptr)
+//                right = right->next;
+//
+//        }
 
 
         return c;
@@ -294,16 +342,30 @@ const Cluster operator-(const Cluster &lhs, const Cluster &rhs) {
         LNodePtr left = lhs.points;
         LNodePtr right = rhs.points;
         Cluster c = Cluster();
+        bool same = false;
 
-        while(left != nullptr || right !=nullptr){
-            if (left != right) {
-                c.add(left->p);
-                c.size++;
-            }
-            if(left!=nullptr)
+        if(lhs.size == 0) {
+            return c;
+        }
+
+        else{
+
+            while (left != nullptr) {
+
+                while (right != nullptr) {
+                    if (left->p == right->p) {
+
+                        same = true;
+                    }
+                    right = right->next;
+
+                }
+                if (same == false) {
+                    c.add(left->p);
+                    c.size++;
+                }
                 left = left->next;
-            if(right!=nullptr)
-                right = right->next;
+            }
         }
 
 
