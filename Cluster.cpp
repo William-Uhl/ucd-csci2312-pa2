@@ -6,7 +6,7 @@
 
 namespace Clustering {
 
-//Copy constructor
+//Copy constructor works
     Cluster::Cluster(const Cluster &inputCluster) {
         size = inputCluster.size;
 
@@ -33,7 +33,7 @@ namespace Clustering {
         }
     }
 
-//overloaded operator=
+//overloaded operator= works
 Cluster &Cluster::operator=(const Cluster &inputCluster) {
         if (this == &inputCluster)
             return *this;
@@ -73,7 +73,7 @@ Cluster &Cluster::operator=(const Cluster &inputCluster) {
         }
     }
 
-//function add a point
+//function add a point works
     void Cluster::add(PointPtr const &ptr) {
         LNodePtr newNode = new LNode(ptr,nullptr);
         if (points == NULL){
@@ -104,7 +104,7 @@ Cluster &Cluster::operator=(const Cluster &inputCluster) {
 
     }
 
-//function remove a point
+//function remove a point works
 PointPtr const &Cluster::remove(PointPtr const &ptr) {
 
         if (size == 0){
@@ -150,7 +150,7 @@ PointPtr const &Cluster::remove(PointPtr const &ptr) {
 
 }
 
-//overload operator<<
+//overload operator<< works
 std::ostream &operator<<(std::ostream &os, const Cluster &cluster) {
         if (cluster.size == 0) {
             os << "Cluster is empty" << std::endl;
@@ -176,7 +176,7 @@ std::ostream &operator<<(std::ostream &os, const Cluster &cluster) {
    // return <#initializer#>;
 //}
 
-//overload operator==
+//overload operator== works
     bool operator==(const Cluster &lhs, const Cluster &rhs) {
 
 
@@ -201,7 +201,7 @@ std::ostream &operator<<(std::ostream &os, const Cluster &cluster) {
 
     }
 
-//overload operator+=
+//overload operator+=    DOES NOT WORK
 Cluster &Cluster::operator+=(const Cluster &rhs) {
 
 
@@ -229,7 +229,7 @@ Cluster &Cluster::operator+=(const Cluster &rhs) {
         return c;
 }
 
-//overload operator-=
+//overload operator-=    DOES NOT WORK
 Cluster &Cluster::operator-=(const Cluster &rhs) {
 
         LNodePtr left = this->points;
@@ -264,7 +264,7 @@ Cluster &Cluster::operator-=(const Cluster &rhs) {
         return c;
 }
 
-//overload operator+=
+//overload operator+=  works
 Cluster &Cluster::operator+=(const Point &rhs) {
 
         PointPtr n = new Point(rhs);
@@ -273,7 +273,7 @@ Cluster &Cluster::operator+=(const Point &rhs) {
 
 }
 
-//overload operator-=
+//overload operator-=  works
 Cluster &Cluster::operator-=(const Point &rhs) {
 
        if(size == 0)
@@ -305,7 +305,7 @@ Cluster &Cluster::operator-=(const Point &rhs) {
         return *this;
 }
 
-//overload operator+ with two clusters
+//overload operator+ with two clusters  CLOSE BUT DOES NOT WORK
 const Cluster operator+(const Cluster &lhs, const Cluster &rhs) {
 
         LNodePtr left = lhs.points;
@@ -332,7 +332,7 @@ const Cluster operator+(const Cluster &lhs, const Cluster &rhs) {
         return c;
 }
 
-//overload operator- with two clusters
+//overload operator- with two clusters      CLOSE BUT DOES NOT WORK
 const Cluster operator-(const Cluster &lhs, const Cluster &rhs) {
         LNodePtr left = lhs.points;
         LNodePtr right = rhs.points;
@@ -367,7 +367,7 @@ const Cluster operator-(const Cluster &lhs, const Cluster &rhs) {
         return c;
 }
 
-//overload operator+ with a cluster and a point
+//overload operator+ with a cluster and a point WORKS
     const Cluster operator+(const Cluster &lhs, PointPtr const &rhs) {
 
         Cluster newCluster(lhs);
@@ -376,7 +376,7 @@ const Cluster operator-(const Cluster &lhs, const Cluster &rhs) {
 
     }
 
-//overload operator- with a cluster and a point
+//overload operator- with a cluster and a point WORKS
     const Cluster operator-(const Cluster &lhs, PointPtr const &rhs) {
         Cluster newCluster(lhs);
         newCluster.remove(rhs);
@@ -384,6 +384,7 @@ const Cluster operator-(const Cluster &lhs, const Cluster &rhs) {
 
     }
 
+    //delete function  clears points in other clusters as well. but works
     void Cluster::del() {
 
         if(size!=0){
@@ -405,12 +406,13 @@ const Cluster operator-(const Cluster &lhs, const Cluster &rhs) {
     }
 
 
-    //inserts a LNode intro a cluster
+    //inserts a LNode intro a cluster  works
     void Cluster::ins(LNodePtr first, LNodePtr add, LNodePtr last){
         first->next = add;
         add->next = last;
     }
 
+    //copy  works
     void Cluster::cpy(LNodePtr ptr) {
         LNodePtr end = ptr;
         LNodePtr curr = new LNode(end->p, nullptr);
@@ -427,7 +429,7 @@ const Cluster operator-(const Cluster &lhs, const Cluster &rhs) {
     }
 
 
-    //constructor for LNode
+    //constructor for LNode  works
     LNode::LNode(PointPtr ptr, LNodePtr nodePtr) {
 
         p = ptr;
