@@ -19,15 +19,49 @@ namespace Clustering {
 
         //LNode constructor
         LNode(PointPtr,  LNodePtr);
+
     };
 
     class Cluster {
+    private:
+
+        unsigned int __id;
+
+        int __dims;
+        PointPtr __centroid;
         int size;
         LNodePtr points;
+        bool __validCen;
 
     public:
+
+        //New centroid function
+        void setCentroid(const Point &);
+        bool centroidValid() { return __validCen;}
+        const PointPtr getCentroid();
+        void computeCentroid();
+        void invalidCentroid();
+
+        //id for cluster
+        void idGen();
+        unsigned int getID() const {return __id;}
+
+
+        // for use with operator<<
+        static const char POINT_CLUSTER_ID_DELIM;
+
+
+        //New cluster functionality
+        void setDim(const int dim);
+        void pickPoints(int k, PointPtr *pointArray);
+        int getSize() {return size;}
+        double intraClusterDistance() const;
+        double interClusterDistance(const Cluster &c1, const Cluster &c2);
+        int getClusterEdges();
+        friend double interClusterEdges(const Cluster &c1, const Cluster &c2);
+
         //default constructor
-        Cluster() : size(0), points(nullptr) {};
+        Cluster() : size(0), points(nullptr), __centroid(0) {};
 
         // The big three: cpy ctor, overloaded operator=, dtor
         Cluster(const Cluster &);
@@ -56,7 +90,7 @@ namespace Clustering {
         Cluster &operator+=(const Cluster &rhs); // union
         Cluster &operator-=(const Cluster &rhs); // (asymmetric) difference
 
-        Cluster &operator+=(const Point &rhs); // add point
+        Cluster &operator+=(const Point &rhs);  // add point
         Cluster &operator-=(const Point &rhs); // remove point
 
         // Set-destructive operators (duplicate points in the space)
@@ -67,8 +101,34 @@ namespace Clustering {
         friend const Cluster operator+(const Cluster &lhs, const PointPtr &rhs);
         friend const Cluster operator-(const Cluster &lhs, const PointPtr &rhs);
 
+
+        //Inner class Move
+        class Move{
+                private:
+                    PointPtr ptr;
+                    Cluster *from, *to;
+                public:
+                    Move(PointPtr &ptr,Cluster *from, Cluster *to) :
+                    ptr(ptr), from(from), to(to)
+                    {}
+                    void perform() {to->add(from->remove(ptr));};
+
+
+        };
+
+        //Kmeans
+        class Kmeans{
+        private:
+
+        public:
+            static const double SCORE_DIFF_THRESHOLD;
+            double computeClusteringScore(int k, Cluster *cluster);
+            void runKmeans();
+
+
+        };
+
     };
 
 }
 #endif //UHL_PA2_CLUSTER_H
-
