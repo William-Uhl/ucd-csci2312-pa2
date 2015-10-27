@@ -1,15 +1,25 @@
 //
 // Created by Tres on 9/15/2015.
 //
-
-#include <math.h>
-#include <assert.h>
 #include "Point.h"
+#include "Cluster.h"
+#include <cmath>
+#include <assert.h>
+#include <cstdlib>
+#include <iostream>
+#include<fstream>
+#include <sstream>
+#include <algorithm>
+
 using namespace std;
 
 namespace Clustering {
+
+    //setting the deliminator for read in
+    const char Point::POINT_VALUE_DELIM = ',';
+
 //constructor
-   Point::Point(int dimensions) {
+    Point::Point(int dimensions) {
         if (dimensions == 0)
             dimensions = 2; //reset dimensions to prevent a dimensionless point
         dim = dimensions;
@@ -74,9 +84,9 @@ namespace Clustering {
     }
 
 //overload operator*=
-    Point& Point::operator*=(double d) {
+    Point &Point::operator*=(double d) {
         for (int i = 0; i < dim; i++)
-            values[i] = values[i]* d;
+            values[i] = values[i] * d;
         return *this;
     }
 
@@ -124,7 +134,7 @@ namespace Clustering {
     }
 
 //overload operator-=
-   Point &operator-=(Point &lhs, const Point &rhs) {
+    Point &operator-=(Point &lhs, const Point &rhs) {
         if (lhs.dim == rhs.dim) {
             for (int i = 0; i < lhs.dim; i++)
                 lhs.values[i] -= rhs.values[i];
@@ -256,17 +266,25 @@ namespace Clustering {
 //overload operator<<
     std::ostream &operator<<(std::ostream &os, const Point &point) {
 
-        for (int i = 0; i < point.dim -1; i++)
+        for (int i = 0; i < point.dim - 1; i++)
             os << point.values[i] << ", ";
-        os << point.values[point.dim - 1] ;
-
+        os << point.values[point.dim - 1];
+        os << " : ";
         return os;
     }
 
 //overload operator>>
     std::istream &operator>>(std::istream &istream, Point &point) {
-        for (int i = 0; i < point.dim; i++)
-            istream >> point.values[i];
-        return istream;
+        std::string number;
+        double num;
+        int dimension = 0;
+        static const char DELIMINATOR = ',';
+
+        while (getline(istream,number,DELIMINATOR)) {
+
+            num = atof(number.c_str());
+            point.setValue(dimension,num);
+            dimension++;
+        }
     }
 }
