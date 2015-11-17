@@ -6,6 +6,7 @@
 #define UHL_PA2_CLUSTER_H
 
 
+
 #include "Point.h"
 
 namespace Clustering {
@@ -38,7 +39,7 @@ namespace Clustering {
         //New centroid function
         void setCentroid(const Point &);
         bool centroidValid() { return __validCen;}
-        const PointPtr getCentroid();
+        const Point getCentroid();
         void computeCentroid();
         void invalidCentroid();
 
@@ -59,6 +60,7 @@ namespace Clustering {
         double interClusterDistance(const Cluster &c1, const Cluster &c2);
         int getClusterEdges();
         friend double interClusterEdges(const Cluster &c1, const Cluster &c2);
+        Point getPoint(int num) const;
 
         //default constructor
         Cluster() : size(0), points(nullptr), __centroid(0) {};
@@ -116,14 +118,22 @@ namespace Clustering {
 
         };
 
+        LNodePtr operator[](int i){
+            LNodePtr curr = this->points;
+            for(int j = 0; j<i; j++){
+                if (curr->next != NULL)
+                    curr = curr->next;
+            }
+        }
         //Kmeans
         class Kmeans{
         private:
 
+
         public:
-            static const double SCORE_DIFF_THRESHOLD;
+            static constexpr double SCORE_DIFF_THRESHOLD = .001;
             double computeClusteringScore(int k, Cluster *cluster);
-            void runKmeans();
+            void runKmeans(int k,int dim);
 
 
         };
