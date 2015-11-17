@@ -8,6 +8,7 @@
 #include <fstream>
 #include <sstream>
 #include <bits/stl_algo.h>
+#include <ctime>
 
 using std::string;
 
@@ -483,8 +484,8 @@ const Cluster operator-(const Cluster &lhs, const Cluster &rhs) {
         __validCen = true;
     }
 
-    const PointPtr Cluster::getCentroid() {
-        return __centroid;
+    const Point Cluster::getCentroid() {
+        return *__centroid;
     }
 
     void Cluster::computeCentroid() {
@@ -566,40 +567,119 @@ const Cluster operator-(const Cluster &lhs, const Cluster &rhs) {
 
     }
 
-//    double Clustering::interClusterEdges(const Cluster &c1, const Cluster &c2) {
-//        double size1 = c1.size;
-//        double size2 = c2.size;
-//        double edges = (size1 *(size2 - 1))/2;
-//        return edges;
-//
-//    }
-
-//    double Cluster::Kmeans::computeClusteringScore(int k, Cluster *cluster) {
-//        double dIN = 0;
-//        double dOUT = 0;
-//        int pIN = 0;
-//        int pOUT = 0;
-//        for(int i = 0;i<k; i++)
-//            dIN = dIN + cluster[i].intraClusterDistance();
-//
-//        for (int i = 0; i<k-1; i++){
-//            for(int j = i; j<k; j++)
-//                dOUT = dOUT + cluster->interClusterDistance(cluster[i],cluster[j]);
-//        }
-//
-//        for(int i =0;i<k;i++)
-//            pIN = pIN + cluster[i].getClusterEdges();
-//
-//        for(int i = 0;i<k-1; i++){
-//            for(int j=i+1;j<k; j++)
-//                pOUT = pOUT + cluster->interClusterEdges(cluster[i],cluster[j]);
-//
-//        }
-//        double betaCV = (dIN/pIN)/(dOUT/pOUT);
-//        return betaCV;
-//    }
-
-    void Cluster::Kmeans::runKmeans() {
+    double interClusterEdges(const Cluster &c1, const Cluster &c2) {
+        double size1 = c1.size;
+        double size2 = c2.size;
+        double edges = (size1 *(size2 - 1))/2;
+        return edges;
 
     }
+
+    Point Cluster::getPoint(int num) const {
+
+
+    }
+
+    double Cluster::Kmeans::computeClusteringScore(int k, Cluster *cluster) {
+        double dIN = 0;
+        double dOUT = 0;
+        double pIN = 0;
+        double pOUT = 0;
+        for (int i = 0; i < k; i++)
+            dIN = dIN + cluster[i].intraClusterDistance();
+
+        for (int i = 0; i < k - 1; i++) {
+            for (int j = i; j < k; j++) {
+                Cluster c = cluster[i];
+                Cluster c2 = cluster[j];
+
+                dOUT = dOUT + cluster->interClusterDistance(c,c2);
+            }
+        }
+
+
+        for(int i =0;i<k;i++)
+            pIN = pIN + cluster[i].getClusterEdges();
+
+        for(int i = 0;i<k-1; i++){
+            for(int j=i+1;j<k; j++) {
+                Cluster c = cluster[i];
+                Cluster c2 = cluster[j];
+
+                pOUT = pOUT + interClusterEdges(c,c2);
+            }
+        }
+        double betaCV = (dIN/pIN)/(dOUT/pOUT);
+        return betaCV;
+    }
+
+
+
+    void Cluster::Kmeans::runKmeans(int k, int dim) {
+
+        PointPtr centArray[k];
+        Cluster point_space;
+
+        std::ifstream csv("points.txt");
+        point_space.setDim(dim);
+        csv >> point_space;
+        point_space.pickPoints(k,centArray);
+        point_space.setCentroid(*centArray[k]);
+
+        Cluster *cArr = new Cluster[k];
+        cArr[k] = point_space;
+
+
+        for(int i = 0; i<k-1; i++){
+            Cluster *add = new Cluster;
+            add->setDim(dim);
+            add->setCentroid(*centArray[i]);
+            cArr[i] = *add;
+        }
+
+        double score = computeClusteringScore(k,cArr);
+        double prevScore;
+        double scoreDiff = SCORE_DIFF_THRESHOLD + 1;
+
+        while(scoreDiff > SCORE_DIFF_THRESHOLD){
+            //loop through clusters
+            for(int i =0; i < k; i++){
+                //loop through points
+                for(int j=0;j<cArr[i].getSize();j++){
+                    Cluster *move = NULL;
+                    //loop through centroids
+                    for(int l = 0;l < k; l++){
+                        PointPtr curr = cArr[i][j]->p;
+                        if (curr->distanceTo(cArr[i].getCentroid()) > curr->distanceTo(cArr[l].getCentroid())){
+
+                            move = &cArr[l];
+                        }
+
+                    }
+
+                     Move(cArr[i][j]->p, &cArr[i], move);
+
+
+                }
+            }
+            for(int i = 0;i< k; i++){
+                if(!(cArr[i].centroidValid()))
+                    cArr[i].computeCentroid();
+            }
+            prevScore = score;
+
+            score = computeClusteringScore(k,cArr);
+            scoreDiff = fabs(score-prevScore);
+        }
+
+
+        std::ofstream out("output.txt");
+        for(int j = 0;j<k;j++)
+            out << cArr[j];
+        out.close();
+
+    }
+
+
 }
+
