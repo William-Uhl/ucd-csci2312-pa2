@@ -8,38 +8,30 @@
 
 
 #include "Point.h"
+#include <forward_list>
+#include <unordered_map>
 
 namespace Clustering {
-
-    typedef Point *PointPtr;
-    typedef struct LNode *LNodePtr;
-
-    struct LNode {
-        PointPtr p;
-        LNodePtr next;
-
-        //LNode constructor
-        LNode(PointPtr,  LNodePtr);
-
-    };
-
+    template <typename T, int dim>
     class Cluster {
     private:
-
         unsigned int __id;
-
         int __dims;
-        PointPtr __centroid;
+        T __centroid;
         int size;
-        LNodePtr points;
+        std::forward_list<T> points;
         bool __validCen;
+        static std::unordered_map<int, double> distMap;
 
     public:
 
+        //hashmap function
+        int genHash( int, int) const;
+
         //New centroid function
-        void setCentroid(const Point &);
+        void setCentroid(const T &);
         bool centroidValid() { return __validCen;}
-        const Point getCentroid();
+        const T getCentroid();
         void computeCentroid();
         void invalidCentroid();
 
@@ -54,13 +46,14 @@ namespace Clustering {
 
         //New cluster functionality
         void setDim(const int dim);
-        void pickPoints(int k, PointPtr *pointArray);
+        void pickPoints(int k, std::vector<T> &);
         int getSize() {return size;}
         double intraClusterDistance() const;
-        double interClusterDistance(const Cluster &c1, const Cluster &c2);
+        double interClusterDistance(const Cluster<T,dim> &c1, const Cluster<T,dim> &c2);
         int getClusterEdges();
-        friend double interClusterEdges(const Cluster &c1, const Cluster &c2);
-        Point getPoint(int num) const;
+
+        template <typename S, int _dim>
+        friend double interClusterEdges(const Cluster<S,dim> &c1, const Cluster<S,dim> &c2);
 
         //default constructor
         Cluster() : size(0), points(nullptr), __centroid(0) {};
@@ -70,47 +63,53 @@ namespace Clustering {
         Cluster &operator=(const Cluster &);
         ~Cluster();
 
-        // Set functions: They allow calling c1.add(c2.remove(p));
-        void add(const PointPtr &);
-        void del();
-        void ins(LNodePtr,LNodePtr,LNodePtr);
-        void cpy(LNodePtr);
-
-        const PointPtr &remove(const PointPtr &);
+        //remove and add a point
+        void add(const T &);
+        const T &remove(const T &);
 
         // Overloaded operators
 
         // IO
-        friend std::ostream &operator<<(std::ostream &, const Cluster &);
-        friend std::istream &operator>>(std::istream &, Cluster &);
+        template <typename S, int _dim>
+        friend std::ostream &operator<<(std::ostream &, const Cluster<S,_dim> &);
+
+        template <typename S, int _dim>
+        friend std::istream &operator>>(std::istream &, Cluster<S,_dim> &);
 
         // Set-preserving operators (do not duplicate points in the space)
         // - Friends
-        friend bool operator==(const Cluster &lhs, const Cluster &rhs);
+        template <typename S, int _dim>
+        friend bool operator==(const Cluster<S,_dim> &lhs, const Cluster<T,_dim> &rhs);
 
         // - Members
-        Cluster &operator+=(const Cluster &rhs); // union
-        Cluster &operator-=(const Cluster &rhs); // (asymmetric) difference
+        Cluster<T,dim> &operator+=(const Cluster<T,dim> &rhs); // union
+        Cluster<T,dim> &operator-=(const Cluster<T,dim> &rhs); // (asymmetric) difference
 
-        Cluster &operator+=(const Point &rhs);  // add point
-        Cluster &operator-=(const Point &rhs); // remove point
+        Cluster<T,dim> &operator+=(const T &rhs);  // add point
+        Cluster<T,dim> &operator-=(const T &rhs); // remove point
 
         // Set-destructive operators (duplicate points in the space)
         // - Friends
-        friend const Cluster operator+(const Cluster &lhs, const Cluster &rhs);
-        friend const Cluster operator-(const Cluster &lhs, const Cluster &rhs);
+        template <typename S, int _dim>
+        friend const Cluster<S,_dim> operator+(const Cluster<S,_dim> &lhs, const Cluster<S,_dim> &rhs);
 
-        friend const Cluster operator+(const Cluster &lhs, const PointPtr &rhs);
-        friend const Cluster operator-(const Cluster &lhs, const PointPtr &rhs);
+        template <typename S, int _dim>
+        friend const Cluster<S,_dim> operator-(const Cluster<S,_dim> &lhs, const Cluster<S,_dim> &rhs);
+
+        template <typename S, int _dim>
+        friend const Cluster<S,_dim> operator+(const Cluster<S,_dim> &lhs, const S &rhs);
+
+        template <typename S, int _dim>
+        friend const Cluster<S,_dim> operator-(const Cluster<S,_dim> &lhs, const S &rhs);
 
 
         //Inner class Move
         class Move{
                 private:
-                    PointPtr ptr;
-                    Cluster *from, *to;
+                    T ptr;
+                    Cluster<T,dim> *from, *to;
                 public:
-                    Move(PointPtr &ptr,Cluster *from, Cluster *to) :
+                    Move(T &ptr,Cluster<T,dim> *from, Cluster<T,dim> *to) :
                     ptr(ptr), from(from), to(to)
                     {}
                     void perform() {to->add(from->remove(ptr));};
@@ -118,8 +117,8 @@ namespace Clustering {
 
         };
 
-        LNodePtr operator[](int i){
-            LNodePtr curr = this->points;
+        T &operator[](int i){
+            T curr = this->points;
             for(int j = 0; j<i; j++){
                 if (curr->next != NULL)
                     curr = curr->next;
@@ -132,7 +131,7 @@ namespace Clustering {
 
         public:
             static constexpr double SCORE_DIFF_THRESHOLD = .001;
-            double computeClusteringScore(int k, Cluster *cluster);
+            double computeClusteringScore(int k, Cluster<T,dim> *cluster);
             void runKmeans(int k,int dim);
 
 
