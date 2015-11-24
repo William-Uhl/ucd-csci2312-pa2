@@ -20,147 +20,144 @@ namespace Clustering {
 //    unsigned int Cluster::__id = 1;
 
 //Copy constructor works
-    Cluster::Cluster(const Cluster &inputCluster) {
+    template <typename T, int dim>
+    Cluster<T,dim>::Cluster(const Cluster<T,dim> &inputCluster) {
         size = inputCluster.size;
         __centroid = inputCluster.__centroid;
-        __validCen = true;
+        __validCen = false;
+        __dims = inputCluster.__dims;
         idGen();
-        if (inputCluster.points == nullptr)
-            points = nullptr;
-        else {
-            //start the new link list
-            LNodePtr curr = inputCluster.points;
-            LNodePtr newNode = new LNode(curr->p,nullptr);
-            points = newNode;
-            curr = curr->next;
-            LNodePtr prev = points;
-
-            //moves down linklist creating new link list
-            while(curr != NULL){
-                LNodePtr newNode = new LNode(curr->p,nullptr);
-                prev->next = newNode;
-                prev = newNode;
-
-                curr = curr->next;
-
-            }
-
-        }
+        points = inputCluster.points;
+//        if (inputCluster.points == nullptr)
+//            points = nullptr;
+//        else {
+//            //start the new link list
+//            LNodePtr curr = inputCluster.points;
+//            LNodePtr newNode = new LNode(curr->p,nullptr);
+//            points = newNode;
+//            curr = curr->next;
+//            LNodePtr prev = points;
+//
+//            //moves down linklist creating new link list
+//            while(curr != NULL){
+//                LNodePtr newNode = new LNode(curr->p,nullptr);
+//                prev->next = newNode;
+//                prev = newNode;
+//
+//                curr = curr->next;
+//
+//            }
+//        }
     }
 
 //overloaded operator= works
-Cluster &Cluster::operator=(const Cluster &inputCluster) {
-        if (this == &inputCluster)
-            return *this;
-
+template <typename T, int dim>
+Cluster<T,dim> &Cluster<T,dim>::operator=(const Cluster<T,dim> &inputCluster) {
+        //TODO throw exception to prevent self assignment
+//              if (this == &inputCluster)
+//            return *this;
+        points.clear();
         size = inputCluster.size;
         __centroid = inputCluster.__centroid;
-        __validCen = true;
+        __validCen = false;
         idGen();
 
-        if (inputCluster.points == nullptr)
+        if (inputCluster.points.empty())
             points = nullptr;
-        else {
-            //start the new link list
-            LNodePtr curr = inputCluster.points;
-            LNodePtr newNode = new LNode(curr->p,nullptr);
-            points = newNode;
-            curr = curr->next;
-            LNodePtr prev = points;
-
-            //moves down linklist creating new link list
-            while(curr != NULL){
-                LNodePtr newNode = new LNode(curr->p,nullptr);
-                prev->next = newNode;
-                prev = newNode;
-
-                curr = curr->next;
-
-            }
-
-        }
+        else
+            points = inputCluster.points;
 }
 
 //destructor
+    template <typename T, int dim>
     Cluster::~Cluster() {
-        LNodePtr delptr= points;
-        while(delptr != NULL){
-            LNodePtr forward = delptr->next;
-            delete delptr;
-            delptr = forward;
-        }
+        points.clear();
     }
 
-//function add a point works
-    void Cluster::add(PointPtr const &ptr) {
-        LNodePtr newNode = new LNode(ptr,nullptr);
-        if (points == NULL){
-            points = newNode;
+//function add a point
+    template <typename T, int dim>
+    void Cluster<T,dim>::add(T const &ptr) {
+        bool flag = false;
+        if (points.empty()){
+            points.push_front(ptr);
         }
-        else if(*(points->p) > *ptr)
-        {
-            newNode->next = points;
-            points = newNode;
-        }
+//        else if(*(points->p) > *ptr)
+//        {
+//            newNode->next = points;
+//            points = newNode;
+//        }
         else{
-            LNodePtr curr = points;
-            LNodePtr nex = points->next;
-
-            while(true){
-                if(nex == nullptr || *(nex->p) > *ptr){
-                    curr->next = newNode;
-                    newNode->next = nex;
-                    break;
-                }
-                else{
-                    curr = nex;
-                    nex = nex->next;
+            auto curr = points.begin();
+            auto nex = points.begin();
+            nex++;
+            if(ptr <= *curr){
+                points.push_front(ptr);
+            }
+            else if (size == 1){
+                points.insert_after(curr,ptr);
+            }
+            else {
+                while (nex != points.end()) {
+                    if (ptr <= *nex) {
+                        points.insert_after(curr,ptr);
+                        flag = true;
+                        break;
+                    }
+                    else {
+                        curr++;
+                        nex++;
+                    }
                 }
             }
         }
         size++;
+        if(!flag)
+            points.insert_after(points.end(),ptr);
+        this->invalidCentroid();
 
     }
 
-//function remove a point works
-PointPtr const &Cluster::remove(PointPtr const &ptr) {
+//function remove a point FIX
+    template <typename T, int dim>
+     const  T &Cluster<T,dim>::remove(const T &ptr) {
 
         if (size == 0){
-            std::cout << "Cluster is empty nothing to remove" << std::endl;
-            return ptr;
+            // TODO throw error no point to remove
         }
         else if(size == 1) {
-            if(*(points->p) == *ptr){
-                points = nullptr;
+            if(points.front() == *ptr){
+                points.pop_front();
                 size--;
+                invalidCentroid();
                 return ptr;
 
             }
             else{
-                std::cout << "No point matches" << std::endl;
-                return ptr;
+                //TODO throw error no matching point
             }
         }
         else {
             //traverse the cluster looking for the point to delete
-            LNodePtr prev = points;
-            LNodePtr curr = points->next;
+            bool flag = false;
+            auto curr = points.begin();
+            auto nex = points.begin();
+            nex++;
 
+            while (*nex != ptr && nex!=points.end()) {
+                curr++;
+                nex++;
+            }
 
-            while (curr != nullptr) {
-                if (*(curr->p) == *ptr){
-
-                    prev->next = curr->next;
-                    delete curr;
+                if (*nex == *ptr){
+                    points.erase_after(curr);
                     size--;
+                    this->invalidCentroid();
                     return ptr;
                 }
                 else {
-                    prev = curr;
-                    curr = curr->next;
-
+                    //TODO throw exception point not found
                 }
-            }
+
 
             return ptr;
         }
@@ -169,48 +166,49 @@ PointPtr const &Cluster::remove(PointPtr const &ptr) {
 }
 
 //overload operator<< works
-std::ostream &operator<<(std::ostream &os, const Cluster &cluster) {
+    template <typename S, int dim>
+std::ostream &operator<<(std::ostream &os, const Cluster<S,dim> &cluster) {
         if (cluster.size == 0) {
             os << "Cluster is empty" << std::endl;
             return os;
         }
 
+        auto curr = cluster.points.begin();
 
-        LNodePtr current = cluster.points;
-        //int counter =1;
-        for( ; current != nullptr; current = current->next) {
-           // os << "Point " << counter++ << std::endl;
-            os << *(current->p) <<
-            cluster.getID() << std::endl;
-
+        while(curr != cluster.points.end()){
+            os << *curr;
+            os << cluster.getID() << std::endl;
+            curr++;
         }
-
         return os;
-
-
 }
 
 
 //overload operator>>
-std::istream &operator>>(std::istream & inStream, Cluster &cluster) {
+    template <typename S, int dim>
+    std::istream &operator>>(std::istream & inStream, Clustering::Cluster<S,dim> &cluster) {
 
         std::string input;
         static const char DELIMINATOR = ',';
         while (getline(inStream,input)) {
             int num = std::count(input.begin(),input.end(),DELIMINATOR) + 1;
+            if (num != dim){
+                //TODO throw error
+            }
 
-            cluster.setDim(num);
-            PointPtr p;
-            p = new Point(num);
+            S *p;
+            p = new S;
 
             std::stringstream lineStream(input);
             lineStream >> *p;
-            cluster.add(p);
+            cluster.add(*p);
         }
+        return inStream;
 }
 
 //overload operator== works
-    bool operator==(const Cluster &lhs, const Cluster &rhs) {
+    template <typename S, int dim>
+    bool operator==(const Cluster<S,dim> &lhs, const Cluster<S,dim> &rhs) {
 
 
         if (lhs.size != rhs.size)
@@ -218,13 +216,13 @@ std::istream &operator>>(std::istream & inStream, Cluster &cluster) {
         if(lhs.size == 0 && rhs.size ==0)
             return true;
 
-        LNodePtr left = lhs.points;
-        LNodePtr right = rhs.points;
+        auto leftIt = lhs.points.begin();
+        auto rightIt = rhs.points.begin();
 
-        while(left != nullptr && right != nullptr) {
-            if (*(left->p) == *(right->p)) {
-                left = left->next;
-                right = right->next;
+        while(leftIt!=lhs.points.end() && rightIt != rhs.points.end()) {
+            if (*(leftIt) == *(rightIt)) {
+                leftIt++;
+                rightIt++;
                 }
             else{
                 return false;
@@ -234,39 +232,35 @@ std::istream &operator>>(std::istream & inStream, Cluster &cluster) {
 
     }
 
-//overload operator+=    Maybe WORK
-Cluster &Cluster::operator+=(const Cluster &rhs) {
-
-
-        LNodePtr left = this->points;
-        LNodePtr right = rhs.points;
-
+//overload operator+=
+    template <typename T, int dim>
+Cluster<T,dim> &Cluster<T,dim>::operator+=(const Cluster<T,dim> &rhs) {
         bool same = false;
 
-            while (left != nullptr) {
+        auto rightIt = rhs.points.begin();
+            while (rightIt != rhs.points.end()) {
 
-                while (right != nullptr) {
-                    if (left->p == right->p) {
-
+                auto leftIt = this->points.begin();
+                while (leftIt != this->points.end()) {
+                    if (*rightIt == *leftIt) {
                         same = true;
                     }
 
-                    right = right->next;
+                    leftIt++;
                 }
-                if (same == false) {
-                    this->add(left->p);
+                if (!same) {
+                    this->add(*rightIt);
                     this->size++;
+                    this->invalidCentroid();
                 }
-                left = left->next;
+                rightIt++;
             }
         return *this;
 }
 
-//overload operator-=    Maybe WORK
-Cluster &Cluster::operator-=(const Cluster &rhs) {
-
-        LNodePtr left = this->points;
-        LNodePtr right = rhs.points;
+//overload operator-=
+    template <typename T, int dim>
+Cluster<T,dim> &Cluster<T,dim>::operator-=(const Cluster<T,dim> &rhs) {
 
         bool same = false;
 
@@ -274,300 +268,204 @@ Cluster &Cluster::operator-=(const Cluster &rhs) {
             return *this;
         }
 
-        else{
+        auto rightIt = rhs.points.begin();
 
-            while (left != nullptr) {
+            while (rightIt != rhs.points.end()) {
 
-                while (right != nullptr) {
-                    if (left->p == right->p) {
-
+                auto leftIt = this->points.begin();
+                while (leftIt != this->points.end()) {
+                    if (*leftIt == *rightIt) {
                         same = true;
                     }
-                    right = right->next;
+                    leftIt++;
 
                 }
-                if (same == true) {
-                    this->remove(left->p);
+                if (!same) {
+                    this->remove(*rightIt);
                     this->size--;
+                    this->invalidCentroid();
                 }
-                left = left->next;
+                rightIt++;
             }
-        }
+
 
         return *this;
 }
 
 //overload operator+=  works
-Cluster &Cluster::operator+=(const Point &rhs) {
-
-        PointPtr n = new Point(rhs);
-        this->add(n);
+template <typename T, int dim>
+Cluster<T,dim> &Cluster<T,dim>::operator+=(const T &rhs) {
+        this->add(rhs);
         return *this;
 
 }
 
 //overload operator-=  works
-Cluster &Cluster::operator-=(const Point &rhs) {
-
-       if(size == 0)
-           return *this;
-
-        if(size == 1){
-            if (*(this->points->p) == rhs){
-                points = nullptr;
-                size--;
-                return *this;
-            }
-            else
-                return *this;
-        }
-
-        LNodePtr prev = points;
-        LNodePtr curr = points->next;
-
-        while(curr != nullptr){
-            if(*(curr->p)== rhs){
-                prev->next = curr->next;
-                delete curr;
-                size--;
-                return *this;
-            }
-            prev= prev->next;
-            curr=curr->next;
-        }
+template <typename T, int dim>
+Cluster<T,dim> &Cluster<T,dim>::operator-=(const T &rhs) {
+    this->remove(rhs);
         return *this;
 }
 
-//overload operator+ with two clusters  CLOSE BUT DOES NOT WORK
-const Cluster operator+(const Cluster &lhs, const Cluster &rhs) {
+//overload operator+ with two clusters
+    template <typename S, int dim>
+const Cluster<S,dim> operator+(const Cluster<S,dim> &lhs, const Cluster<S,dim> &rhs) {
 
-//        Cluster c(lhs);
-//        c+= rhs;
-//        return c;
-
-        LNodePtr left = lhs.points;
-        LNodePtr right = rhs.points;
-        Cluster c(rhs);
-        bool same = false;
-
-        while (left != nullptr) {
-
-            while (right != nullptr) {
-                if (left->p == right->p) {
-
-                    same = true;
-                }
-
-                right = right->next;
-            }
-            if (same == false) {
-                c.add(left->p);
-                c.size++;
-            }
-            left = left->next;
-        }
+        Cluster<S,dim> c(rhs);
+        c+=lhs;
         return c;
 }
 
-//overload operator- with two clusters      CLOSE BUT DOES NOT WORK
-const Cluster operator-(const Cluster &lhs, const Cluster &rhs) {
+//overload operator- with two clusters
+    template <typename S, int dim>
+const Cluster<S,dim> operator-(const Cluster<S,dim> &lhs, const Cluster<S,dim> &rhs) {
 
-        Cluster c(lhs);
+        Cluster<S,dim> c(lhs);
         c-=rhs;
         return c;
-//        LNodePtr left = lhs.points;
-//        LNodePtr right = rhs.points;
-//        Cluster c = Cluster();
-//        bool same = false;
-//
-//        if(lhs.size == 0) {
-//            return c;
-//        }
-//
-//        else{
-//
-//            while (left != nullptr) {
-//
-//                while (right != nullptr) {
-//                    if (left->p == right->p) {
-//
-//                        same = true;
-//                    }
-//                    right = right->next;
-//
-//                }
-//                if (same == false) {
-//                    c.add(left->p);
-//                    c.size++;
-//                }
-//                left = left->next;
-//            }
-//        }
-//
-//
-//        return c;
 }
 
 //overload operator+ with a cluster and a point WORKS
-    const Cluster operator+(const Cluster &lhs, PointPtr const &rhs) {
+    template <typename S, int dim>
+    const Cluster<S,dim> operator+(const Cluster<S,dim> &lhs, S const &rhs) {
 
-        Cluster newCluster(lhs);
+        Cluster<S,dim> newCluster(lhs);
         newCluster.add(rhs);
         return newCluster;
 
     }
 
 //overload operator- with a cluster and a point WORKS
-    const Cluster operator-(const Cluster &lhs, PointPtr const &rhs) {
-        Cluster newCluster(lhs);
+    template <typename S, int dim>
+    const Cluster<S,dim> operator-(const Cluster<S,dim> &lhs, S const &rhs) {
+        Cluster<S,dim> newCluster(lhs);
         newCluster.remove(rhs);
         return newCluster;
 
     }
 
-    //delete function  clears points in other clusters as well. but works
-    void Cluster::del() {
-
-        if(size!=0){
-            LNodePtr c= points;
-            LNodePtr n = points->next;
-            delete c->p;
-
-            while(n!=nullptr) {
-                c = n;
-                n = n->next;
-                delete c->p;
-                delete c;
-            }
-
-        }
-        points=nullptr;
-        size = 0;
-
-    }
-
-
-    //inserts a LNode intro a cluster  works
-    void Cluster::ins(LNodePtr first, LNodePtr add, LNodePtr last){
-        first->next = add;
-        add->next = last;
-    }
-
-    //copy  works
-    void Cluster::cpy(LNodePtr ptr) {
-        LNodePtr end = ptr;
-        LNodePtr curr = new LNode(end->p, nullptr);
-        points = curr;
-        LNodePtr prev = curr;
-        end = end->next;
-
-        for( ; end != nullptr; end = end->next){
-            curr = new LNode(end->p, nullptr);
-            prev->next = curr;
-            prev = curr;
-        }
-
-    }
-
-
-    //constructor for LNode  works
-    LNode::LNode(PointPtr ptr, LNodePtr nodePtr) {
-
-        p = ptr;
-        next = nodePtr;
-
-    }
-
-    void Cluster::setCentroid(const Point &point) {
-        PointPtr cent = new Point(point);
-        __centroid = cent;
+    template <typename T, int dim>
+    void Cluster<T,dim>::setCentroid(const T &point) {
+        __centroid = point;
         __validCen = true;
     }
 
-    const Point Cluster::getCentroid() {
-        return *__centroid;
+    template <typename T, int dim>
+    const T Cluster<T,dim>::getCentroid() {
+        return __centroid;
     }
 
-    void Cluster::computeCentroid() {
-        Point cent(__dims);
-        LNodePtr curr = points;
-        if (curr == NULL)
-            __centroid = NULL;
-        for(int i=0;i <= size; i++){
-            cent += *(curr->p)/size;
-            curr = curr->next;
+    template <typename T, int dim>
+    void Cluster<T,dim>::computeCentroid() {
+        if (points.empty())
+            __centroid = NULL;  //TODO throw exception
+        T cent(__dims);
+        auto it = points.begin();
+        while (it != points.end()){
+            cent += (*it)/size;
+            it++;
         }
-        PointPtr c = new Point(cent);
-        __centroid = c;
+        this->setCentroid(cent);
         __validCen = true;
     }
 
-    void Cluster::idGen() {
+    template <typename T, int dim>
+    void Cluster<T,dim>::idGen() {
         static unsigned int id = 1;
         __id = id++;
 
     }
 
-    void Cluster::invalidCentroid() {
+    template <typename T, int dim>
+    void Cluster<T,dim>::invalidCentroid() {
         __validCen = false;
     }
 
-    void Cluster::setDim(const int dim) {
+    template <typename T, int dim>
+    void Cluster<T,dim>::setDim(const int dim) {
         __dims = dim;
 
     }
 
-    void Cluster::pickPoints(int k, PointPtr *pointArray) {
-
+    template <typename T, int dim>
+    void Cluster<T,dim>::pickPoints(int k, std::vector<T> &pointArray) {
+        auto it = this->points.begin();
         int size= this->size;
         int num = size/k;
-        LNodePtr curr = this->points;
+
 
         for(int i = 0;i<k;i++){
-            pointArray[i] = curr->p;
+            pointArray.push_back(*it);
             for(int j = 0; j<num; j++)
-                curr = curr->next;
+                it++;
 
         }
 
     }
 
-    double Cluster::intraClusterDistance() const {
-        LNodePtr curr = this->points;
+    template <typename T, int dim>
+    double Cluster<T,dim>::intraClusterDistance() const {
+        auto it = this->points.begin();
+        auto it2 = this->points.begin();
+        it2++;
         double dist = 0;
-        while(curr != NULL){
-            LNodePtr other = this->points;
-            while (other != NULL) {
-                dist = (dist + curr->p->distanceTo(*(other->p))) / 2;
-                other = other->next;
+        while(it != points.end()){
+
+            while (it2 != points.end()) {
+                if(*it != *it2) {
+                    int hashID = genHash(it->getID(),it2->getID());
+                    if(!(this->distMap.count(hashID))) {
+                        double diff = it->distanceTo(*it2);
+                        distMap[hashID] = diff;
+                        dist = dist + diff;
+                    }
+                    else
+                        dist = dist + distMap[hashID];
+                }
+                it2++;
             }
-            curr = curr->next;
-        }
+            it++;
+            it2 = this->points.begin();
+            }
+}
 
-    return dist;
-    }
+    template <typename S, int dim>
+    double Cluster<S,dim>::interClusterDistance(const Cluster<S,dim> &c1, const Cluster<S,dim> &c2) {
+        auto it1 = c1.points.begin();
+        auto it2 = c2.points.begin();
 
-    double Cluster::interClusterDistance(const Cluster &c1, const Cluster &c2) {
-        LNodePtr curr = c1.points;
         double dist = 0;
-        while(curr != NULL){
-            LNodePtr other = c2.points;
-            while (other != NULL) {
-                dist = (dist + curr->p->distanceTo(*(other->p))) / 2;
-                other = other->next;
-            }
-            curr = curr->next;
-        }
 
+        while (it1 != c1.points.end()) {
+
+            while (it2 != c2.points.end()) {
+                if (*it1 != *it2) {
+                    int hashID = genHash(it1->getID(), it2->getID());
+                    if (!(this->distMap.count(hashID))) {
+                        double diff = it1->distanceTo(*it2);
+                        distMap[hashID] = diff;
+                        dist = dist + diff;
+                    }
+                    else
+                        dist = dist + distMap[hashID];
+                }
+                it2++;
+
+            }
+            it1++;
+            it2 = c2.points.begin();
+        }
         return dist;
     }
 
-    int Cluster::getClusterEdges() {
+    template <typename T, int dim>
+    int Cluster<T,dim>::getClusterEdges() {
         return((this->size)*((this->size) - 1)/2);
 
     }
 
-    double interClusterEdges(const Cluster &c1, const Cluster &c2) {
+    template <typename T, int dim>
+    double interClusterEdges(const Cluster<T,dim> &c1, const Cluster<T,dim> &c2) {
         double size1 = c1.size;
         double size2 = c2.size;
         double edges = (size1 *(size2 - 1))/2;
@@ -575,12 +473,8 @@ const Cluster operator-(const Cluster &lhs, const Cluster &rhs) {
 
     }
 
-    Point Cluster::getPoint(int num) const {
-
-
-    }
-
-    double Cluster::Kmeans::computeClusteringScore(int k, Cluster *cluster) {
+    template <typename T, int dim>
+    double Cluster<T,dim>::Kmeans::computeClusteringScore(int k, Cluster<T,dim> *cluster) {
         double dIN = 0;
         double dOUT = 0;
         double pIN = 0;
@@ -590,8 +484,8 @@ const Cluster operator-(const Cluster &lhs, const Cluster &rhs) {
 
         for (int i = 0; i < k - 1; i++) {
             for (int j = i; j < k; j++) {
-                Cluster c = cluster[i];
-                Cluster c2 = cluster[j];
+                Cluster<T,dim> c = cluster[i];
+                Cluster<T,dim> c2 = cluster[j];
 
                 dOUT = dOUT + cluster->interClusterDistance(c,c2);
             }
@@ -603,8 +497,8 @@ const Cluster operator-(const Cluster &lhs, const Cluster &rhs) {
 
         for(int i = 0;i<k-1; i++){
             for(int j=i+1;j<k; j++) {
-                Cluster c = cluster[i];
-                Cluster c2 = cluster[j];
+                Cluster<T,dim> c = cluster[i];
+                Cluster<T,dim> c2 = cluster[j];
 
                 pOUT = pOUT + interClusterEdges(c,c2);
             }
@@ -681,5 +575,15 @@ const Cluster operator-(const Cluster &lhs, const Cluster &rhs) {
     }
 
 
+    int Cluster::genHash(int i, int i1) const {
+        //cantors functions
+        if(i > i1){
+            int hash = .5*((i + i1)*(i+i1+1))+i1;
+            return hash;
+        }
+        else{
+            int hash = .5*((i1 + i)*(i1+i+1))+i;
+            return hash;
+        }
+    }
 }
-
