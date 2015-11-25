@@ -6,7 +6,6 @@
 #include <cmath>
 #include <assert.h>
 #include <cstdlib>
-#include <iostream>
 #include<fstream>
 #include <sstream>
 #include <algorithm>
@@ -15,66 +14,63 @@ using namespace std;
 
 namespace Clustering {
 
-    //setting the deliminator for read in
-    const char Point::POINT_VALUE_DELIM = ',';
-
 //constructor
-    Point::Point(int dimensions) {
-        if (dimensions == 0)
-            dimensions = 2; //reset dimensions to prevent a dimensionless point
-        dim = dimensions;
-        values = new double[dim];
+    template <typename T,int dim>
+    Point<T,dim>::Point() {
+        genID();
         for (int i = 0; i < dim; i++)
-            values[i] = 0.0;
+            values.push_back(0);
     }
 
 //copy constructor
-    Point::Point(const Point &rhs) {
-        dim = rhs.dim;
-        values = new double[dim];
-        for (int i = 0; i < dim; i++)
-            values[i] = rhs.values[i];
+    template <typename T,int dim>
+    Point<T,dim>::Point(const Point<T,dim> &rhs) {
+        id = rhs.getID();
+        __dim = rhs.__dim;
+        values = rhs.values;
 
     }
 
 //overloaded operator=
-    Point &Point::operator=(const Point &rhs) {
-        if (this == &rhs)
-            return *this;  //prevent self assignment
-        else {
-            dim = rhs.dim;
-            values = new double[dim];
-            for (int i = 0; i < rhs.dim; i++)
-                values[i] = rhs.getValue(i);
-        }
+    template <typename T,int dim>
+    Point<T,dim> &Point<T,dim>::operator=(const Point<T,dim> &rhs) {
+//        if (this == &rhs)
+//            return *this;  //prevent self assignment TODO throw error
+            __dim = rhs.__dim;
+            values = rhs.values;
+            id = rhs.getID();
         return *this;
     }
 
 //destructor
-    Point::~Point() {
+    template <typename T,int dim>
+    Point<T,dim>::~Point() {
 
         delete[] values;
     }
 
 //get the points value
-    double Point::getValue(int dimension) const {
+    template <typename T,int dim>
+    double Point<T,dim>::getValue(int dimension) const {
         //checks to make sure input is of a valid dimension for the point
-        if (dimension >= 1 && dimension <= dim)
+        if (dimension >= 1 && dimension <= dim) //TODO add exception
             return values[dimension - 1];
         return 0;
     }
 
 //set the value of the point
-    void Point::setValue(int i, double input) {
+    template <typename T,int dim>
+    void Point<T,dim>::setValue(int i, T input) {
         values[i] = input;
     }
 
 //function gets the distance between points
-    double Point::distanceTo(const Point &other) const {
-        //if dimensions are not the same return nothing
-        if (other.dim == dim) {
+    template <typename T,int dim>
+    double Point<T,dim>::distanceTo(const Point<T,dim> &other) const {
+        //if dimensions are not the same return nothing TODO THrow err
+        if (other.__dim == __dim) {
             double sum = 0;
-            for (int i = 0; i < dim; i++) {
+            for (int i = 0; i < __dim; i++) {
                 double difference = values[i] - other.values[i];
                 sum += difference * difference;
             }
@@ -84,23 +80,26 @@ namespace Clustering {
     }
 
 //overload operator*=
-    Point &Point::operator*=(double d) {
-        for (int i = 0; i < dim; i++)
+    template <typename T,int dim>
+    Point<T,dim> &Point<T,dim>::operator*=(double d) {
+        for (int i = 0; i < __dim; i++)
             values[i] = values[i] * d;
         return *this;
     }
 
 //overload operator/=
-    Point &Point::operator/=(double d) {
-        assert(d != 0.0);
-        for (int i = 0; i < dim; i++)
+    template <typename T,int dim>
+    Point<T,dim> &Point<T,dim>::operator/=(double d) {
+        assert(d != 0.0); //TODO throw exception
+        for (int i = 0; i < __dim; i++)
             values[i] /= d;
         return *this;
     }
 
 //overload operator*
-    const Point Point::operator*(double d) const {
-        for (int i = 0; i < dim; i++)
+    template <typename T,int dim>
+    const Point<T,dim> Point<T,dim>::operator*(double d) const {
+        for (int i = 0; i < __dim; i++)
             values[i] *= d;
         return *this;
 
@@ -108,35 +107,35 @@ namespace Clustering {
 
 
 //overload operator/
-    const Point Point::operator/(double d) const {
-        assert(d != 0.0);
-        for (int i = 0; i < dim; i++)
+    template <typename T,int dim>
+    const Point<T,dim> Point<T,dim>::operator/(double d) const {
+        assert(d != 0.0); //TODO throw exception
+        for (int i = 0; i < __dim; i++)
             values[i] /= d;
         return *this;
 
     }
 
 //overload operator+=
-    Point &operator+=(Point &lhs, const Point &rhs) {
+    template <typename T,int dim>
+    Point<T,dim> &operator+=(Point<T,dim> &lhs, const Point<T,dim> &rhs) {
+        //TODO throw exception for dim mismatch
         if (&lhs == &rhs) {
             return lhs *= 2;
         }
-        else if (lhs.dim == rhs.dim) {
-            for (int i = 0; i < lhs.dim; i++)
+        else{
+            for (int i = 0; i < lhs.__dim; i++)
                 lhs.values[i] += rhs.values[i];
-            return lhs;
-        }
-        else {
-            //if dimensions not the same return original point
-            cout << "Dimensions do not match could not add" << endl;
             return lhs;
         }
     }
 
 //overload operator-=
-    Point &operator-=(Point &lhs, const Point &rhs) {
-        if (lhs.dim == rhs.dim) {
-            for (int i = 0; i < lhs.dim; i++)
+    template <typename S, int dim>
+    Point<S,dim> &operator-=(Point<S,dim> &lhs, const Point<S,dim> &rhs) {
+        //TODO throw exception for dim mismatch
+        if (lhs.__dim == rhs.__dim) {
+            for (int i = 0; i < lhs.__dim; i++)
                 lhs.values[i] -= rhs.values[i];
             return lhs;
         }
@@ -148,44 +147,39 @@ namespace Clustering {
     }
 
 //overload operator+
-    const Point operator+(const Point &lhs, const Point &rhs) {
-        if (lhs.dim == rhs.dim) {
-            Point newPoint(lhs);
-            for (int i = 0; i < lhs.dim; i++)
+    template <typename S, int dim>
+    const Point<S,dim> operator+(const Point<S,dim> &lhs, const Point<S,dim> &rhs) {
+        //TODO throw mismatch
+        if (lhs.__dim == rhs.__dim) {
+            Point<S,dim> newPoint(lhs);
+            for (int i = 0; i < lhs.__dim; i++)
                 newPoint.values[i] += rhs.values[i];
             return newPoint;
-        }
-        else {
-            //if dimensions not the same return original point
-            cout << "Dimensions do not match could not add" << endl;
-            return 0;
         }
 
     }
 
 //overload operator-
-    const Point operator-(const Point &lhs, const Point &rhs) {
-        if (lhs.dim == rhs.dim) {
-            Point newPoint(lhs);
-            for (int i = 0; i < lhs.dim; i++)
+    template <typename S, int dim>
+    const Point<S,dim> operator-(const Point<S,dim> &lhs, const Point<S,dim> &rhs) {
+        //TODO throw mismatch
+        if (lhs.__dim == rhs.__dim) {
+            Point<S, dim> newPoint(lhs);
+            for (int i = 0; i < lhs.__dim; i++)
                 newPoint.values[i] -= rhs.values[i];
             return newPoint;
         }
-        else {
-            //if dimensions not the same return original point
-            cout << "Dimensions do not match could not subtract" << endl;
-            return 0;
-        }
-
     }
 
 //overload operator==
-    bool operator==(const Point &lhs, const Point &rhs) {
-        if (lhs.dim != rhs.dim)
+    template <typename S, int dim>
+    bool operator==(const Point<S,dim> &lhs, const Point<S,dim> &rhs) {
+
+        if (lhs.__dim != rhs.__dim)
             return false;
         bool answer = false;
 
-        for (int i = 0; i < lhs.dim; i++) {
+        for (int i = 0; i < lhs.__dim; i++) {
             if (lhs.values[i] == rhs.values[i])
                 answer = true;
             else answer = false;
@@ -195,11 +189,12 @@ namespace Clustering {
     }
 
 //overload operator!=
-    bool operator!=(const Point &lhs, const Point &rhs) {
-        if (lhs.dim != rhs.dim)
+    template <typename S, int dim>
+    bool operator!=(const Point<S,dim> &lhs, const Point<S,dim> &rhs) {
+        if (lhs.__dim != rhs.__dim)
             return true;
         bool answer = false;
-        for (int i = 0; i < lhs.dim; i++) {
+        for (int i = 0; i < lhs.__dim; i++) {
             if (lhs.values[i] != rhs.values[i])
                 answer = true;
             else answer = false;
@@ -210,12 +205,13 @@ namespace Clustering {
 // CONVENTION: MORE DIMENSIONS MEANS POINT IS GREATER
 
 //overload operator<
-    bool operator<(const Point &lhs, const Point &rhs) {
-        if (lhs.dim < rhs.dim)
+    template <typename S, int dim>
+    bool operator<(const Point<S,dim> &lhs, const Point<S,dim> &rhs) {
+        if (lhs.__dim < rhs.__dim)
             return true;
         bool answer = false;
 
-        for (int i = 0; i < lhs.dim; i++) {
+        for (int i = 0; i < lhs.__dim; i++) {
             if (lhs.values[i] < rhs.values[i])
                 answer = true;
             else answer = false;
@@ -224,11 +220,12 @@ namespace Clustering {
     }
 
 //overload operator>
-    bool operator>(const Point &lhs, const Point &rhs) {
-        if (lhs.dim > rhs.dim)
+    template <typename S, int dim>
+    bool operator>(const Point<S,dim> &lhs, const Point<S,dim> &rhs) {
+        if (lhs.__dim > rhs.__dim)
             return true;
         bool answer = false;
-        for (int i = 0; i < lhs.dim; i++) {
+        for (int i = 0; i < lhs.__dim; i++) {
             if (lhs.values[i] > rhs.values[i])
                 answer = true;
             else answer = false;
@@ -237,11 +234,12 @@ namespace Clustering {
     }
 
 //overload operator<=
-    bool operator<=(const Point &lhs, const Point &rhs) {
-        if (lhs.dim <= rhs.dim)
+    template <typename S, int dim>
+    bool operator<=(const Point<S,dim> &lhs, const Point<S,dim> &rhs) {
+        if (lhs.__dim <= rhs.__dim)
             return true;
         bool answer = false;
-        for (int i = 0; i < lhs.dim; i++) {
+        for (int i = 0; i < lhs.__dim; i++) {
             if (lhs.values[i] <= rhs.values[i])
                 answer = true;
             else answer = false;
@@ -250,11 +248,12 @@ namespace Clustering {
     }
 
 //overload operator>=
-    bool operator>=(const Point &lhs, const Point &rhs) {
-        if (lhs.dim >= rhs.dim)
+    template <typename S, int dim>
+    bool operator>=(const Point<S,dim> &lhs, const Point<S,dim> &rhs) {
+        if (lhs.__dim >= rhs.__dim)
             return true;
         bool answer = false;
-        for (int i = 0; i < lhs.dim; i++) {
+        for (int i = 0; i < lhs.__dim; i++) {
             if (lhs.values[i] >= rhs.values[i])
                 answer = true;
             else
@@ -264,17 +263,19 @@ namespace Clustering {
     }
 
 //overload operator<<
-    std::ostream &operator<<(std::ostream &os, const Point &point) {
+    template <typename S, int dim>
+    std::ostream &operator<<(std::ostream &os, const Point<S,dim> &point) {
 
-        for (int i = 0; i < point.dim - 1; i++)
+        for (int i = 0; i < point.__dim - 1; i++)
             os << point.values[i] << ", ";
-        os << point.values[point.dim - 1];
+        os << point.values[point.__dim - 1];
         os << " : ";
         return os;
     }
 
 //overload operator>>
-    std::istream &operator>>(std::istream &istream, Point &point) {
+    template <typename S, int dim>
+    std::istream &operator>>(std::istream &istream, Point<S,dim> &point) {
         std::string number;
         double num;
         int dimension = 0;
@@ -286,5 +287,11 @@ namespace Clustering {
             point.setValue(dimension,num);
             dimension++;
         }
+    }
+
+    template <typename T,int dim>
+    void Point<T,dim>::genID() {
+        static int newid = 1;
+        id = newid++;
     }
 }
